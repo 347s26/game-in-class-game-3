@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Card Creator</title>
+    <link rel="stylesheet" href="styles/style.css">
+  </head>
+
+  <template id="grid-template">
+    <div class="game-board">
+      <div class="winner-overlay"></div>
+        
+      <button data-cell="1"></button>
+      <button data-cell="2"></button>
+      <button data-cell="3"></button>
+      <button data-cell="4"></button>
+      <button data-cell="5"></button>
+      <button data-cell="6"></button>
+      <button data-cell="7"></button>
+      <button data-cell="8"></button>
+      <button data-cell="9"></button>
+    </div>
+  </template>
+
+  <body id="big-board">
+    <div id="top-left"></div>
+    <div id="top-center"></div>
+    <div id="top-right"></div>
+    <div id="center-left"></div>
+    <div id="center-center"></div>
+    <div id="center-right"></div>
+    <div id="bottom-left"></div>
+    <div id="bottom-center"></div>
+    <div id="bottom-right"></div>
+
+  </body>
+  <script>
+    const template = document.getElementById("grid-template").content;
+    // create all the 9 tic-tac-toe boards
+    document.getElementById("top-left").appendChild(template.cloneNode(true));
+    document.getElementById("top-center").appendChild(template.cloneNode(true));
+    document.getElementById("top-right").appendChild(template.cloneNode(true));
+    document.getElementById("center-left").appendChild(template.cloneNode(true));
+    document.getElementById("center-center").appendChild(template.cloneNode(true));
+    document.getElementById("center-right").appendChild(template.cloneNode(true));
+    document.getElementById("bottom-left").appendChild(template.cloneNode(true));
+    document.getElementById("bottom-center").appendChild(template.cloneNode(true));
+    document.getElementById("bottom-right").appendChild(template.cloneNode(true));
+
+    let currentPlayer = "O"; // Keep track of turns
+
+    document.addEventListener("click", function (e) {
+        if (e.target.tagName == "BUTTON" && !e.target.disabled) { // if button is clicked write current player and disable button
+            const board = e.target.closest(".game-board");
+            e.target.textContent = currentPlayer;
+            e.target.disabled = true;
+
+            const winner = checkWin(board);
+            if (winner) {
+                const overlay = board.querySelector(".winner-overlay");
+                overlay.textContent = winner;
+                overlay.classList.add("show");
+
+                board.dataset.winner = winner;
+
+                disableAllButtons(board);
+                checkBigBoardWin();
+            }
+            currentPlayer = currentPlayer == "X" ? "O" : "X"; // switch player
+        }
+    });
+
+    function checkWin(board) {
+        const b = [];
+        for (let i = 1; i <= 9; i++) {
+            b[i] = board.querySelector(`[data-cell="${i}"]`).textContent.trim();
+        }
+        const wins = [
+            [1,2,3], [4,5,6], [7,8,9], // horizontal win
+            [1,4,7], [2,5,8], [3,6,9], // vertical win
+            [1,5,9], [3,5,7] // diagonal win
+        ];
+
+        for (const [a, c, d] of wins) {
+            if (b[a] !== "" && b[a] === b[c] && b[a] === b[d]) {
+                return b[a];
+            }
+        }
+        return null;
+    }
+
+    function checkBigBoardWin() {
+        const big = [];
+        const ids = [
+            "top-left", "top-center", "top-right",
+            "center-left", "center-center", "center-right",
+            "bottom-left", "bottom-center", "bottom-right"
+        ];
+
+        // Fill big[] with the winner of each mini-board
+        for (let i = 0; i < 9; i++) {
+            const board = document.getElementById(ids[i]);
+            big[i+1] = board.querySelector(".game-board").dataset.winner || "";
+        }
+
+        const wins = [
+            [1,2,3], [4,5,6], [7,8,9], // horizontal win
+            [1,4,7], [2,5,8], [3,6,9], // vertical win
+            [1,5,9], [3,5,7] // diagonal win
+        ];
+
+        for (const [a, b, c] of wins) {
+            if (big[a] !== "" && big[a] === big[b] && big[a] === big[c]) {
+                alert(big[a] + " wins the game!");
+                resetGame();
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    function disableAllButtons(board) {
+        board.querySelectorAll("button").forEach(btn => btn.disabled = true);
+    }
+
+    function resetGame() {
+        const boards = document.querySelectorAll(".game-board");
+
+        boards.forEach(board => {
+            // Clear winner overlay
+            const overlay = board.querySelector(".winner-overlay");
+            overlay.textContent = "";
+            overlay.classList.remove("show");
+
+            // Clear winner tracking
+            delete board.dataset.winner;
+
+            // Reset all buttons
+            board.querySelectorAll("button").forEach(btn => {
+                btn.textContent = "";
+                btn.disabled = false;
+            });
+        });
+    }
+  </script>
+
+</html>
